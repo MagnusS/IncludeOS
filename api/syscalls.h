@@ -1,5 +1,8 @@
 #pragma once
-
+//make it work on aarch64 which wants to do clone and not fork
+#if !defined(SYS_fork)
+  #define SYS_fork
+#endif
 #define __includeos(num, ...) extern long syscall_##num(long,...)
 
 extern long syscall_n(long,...);

@@ -16,7 +16,7 @@ class LibCxxAbiConan(ConanFile):
         "shared":False
     }
     no_copy_source=True
-
+    exports_sources=['float16_gcc.patch']
     def llvm_checkout(self,project):
         filename="{}-{}.src.tar.xz".format(project,self.version)
         tools.download("http://releases.llvm.org/{}/{}".format(self.version,filename),filename)
@@ -28,6 +28,8 @@ class LibCxxAbiConan(ConanFile):
         self.llvm_checkout("llvm")
         self.llvm_checkout("libcxx")
         self.llvm_checkout("libcxxabi")
+        if (self.settings.compiler == "gcc"):
+            tools.patch("libcxx",patch_file='float16_gcc.patch')
 
     def _triple_arch(self):
         return {

@@ -18,7 +18,7 @@ class LibCxxConan(ConanFile):
         "shared":False,
         "threads":True
     }
-    exports_sources="CMakeLists.txt"
+    exports_sources=['CMakeLists.txt','float16_gcc.patch']
     no_copy_source=True
 
     def requirements(self):
@@ -39,6 +39,8 @@ class LibCxxConan(ConanFile):
     def source(self):
         self.llvm_checkout("llvm")
         self.llvm_checkout("libcxx")
+        if (self.settings.compiler == "gcc"):
+            tools.patch("libcxx",patch_file='float16_gcc.patch')
         shutil.copy("libcxx/CMakeLists.txt","libcxx/CMakeListsOriginal.txt")
         shutil.copy("CMakeLists.txt","libcxx/CMakeLists.txt")
 

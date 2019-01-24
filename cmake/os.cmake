@@ -120,7 +120,8 @@ else()
 
     include_directories(${INSTALL_LOC}/${ARCH}/include)
   endif()
-  if (NOT ${PLATFORM} STREQUAL x86_nano )
+
+  if (NOT ${PLATFORM} STREQUAL x86_nano AND NOT ${PLATFORM} STREQUAL aarch64_vm)
     add_library(http_parser STATIC IMPORTED)
     set_target_properties(http_parser PROPERTIES LINKER_LANGUAGE CXX)
     set_target_properties(http_parser PROPERTIES IMPORTED_LOCATION ${INCLUDEOS_PREFIX}/${ARCH}/lib/http_parser.o)
@@ -181,7 +182,7 @@ else()
     set_target_properties(solo5 PROPERTIES IMPORTED_LOCATION ${INCLUDEOS_PREFIX}/${ARCH}/lib/solo5_hvt.o)
   endif()
 
-  if (${PLATFORM} STREQUAL x86_nano)
+  if (${PLATFORM} STREQUAL x86_nano OR ${PLATFORM} STREQUAL aarch64_vm)
     set(LIBRARIES
       libos
       libplatform
@@ -236,6 +237,8 @@ if ("${ARCH}" STREQUAL "x86_64")
   set(CMAKE_ASM_NASM_OBJECT_FORMAT "elf64")
   set(OBJCOPY_TARGET "elf64-x86-64")
 #  set(CAPABS "${CAPABS} -m64")
+elseif("${ARCH}" STREQUAL "aarch64")
+
 else()
   set(ARCH_INTERNAL "ARCH_X86")
   set(CMAKE_ASM_NASM_OBJECT_FORMAT "elf")
@@ -269,8 +272,11 @@ set(BUILD_SHARED_LIBRARIES OFF)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
 
 # TODO: find a more proper way to get the linker.ld script ?
-set(LDFLAGS "-nostdlib -melf_${ELF} --eh-frame-hdr ${LD_STRIP} --script=${LINK_SCRIPT}  ${PRE_BSS_SIZE}")
-
+if("${ARCH}" STREQUAL "aarch64")
+  set(LDFLAGS "-nostdlib -m${ELF}elf --eh-frame-hdr ${LD_STRIP} --script=${LINK_SCRIPT}  ${PRE_BSS_SIZE}")
+else()
+  set(LDFLAGS "-nostdlib -melf_${ELF} --eh-frame-hdr ${LD_STRIP} --script=${LINK_SCRIPT}  ${PRE_BSS_SIZE}")
+endif()
 
 set(ELF_POSTFIX .elf.bin)
 
@@ -299,7 +305,7 @@ function(os_add_executable TARGET NAME)
   if (CMAKE_BUILD_TYPE MATCHES DEBUG)
     set(STRIP_LV )
   else()
-    set(STRIP_LV strip --strip-all ${CMAKE_CURRENT_BINARY_DIR}/${TARGET})
+    set(STRIP_LV ${CMAKE_STRIP} --strip-all ${CMAKE_CURRENT_BINARY_DIR}/${TARGET})
   endif()
   FILE(WRITE ${CMAKE_CURRENT_BINARY_DIR}/binary.txt
     "${TARGET}"

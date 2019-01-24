@@ -13,7 +13,7 @@ endif()
 
 message(STATUS "Target CPU ${ARCH}")
 
-#only for clang..
+#only for clang.. and probably only for apple or when we dont have a cross compiler..
 set(TRIPLE "${ARCH}-pc-linux-elf")
 set(CMAKE_CXX_COMPILER_TARGET ${TRIPLE})
 set(CMAKE_C_COMPILER_TARGET ${TRIPLE})
@@ -48,7 +48,7 @@ if ((CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT))
  if (DEFINED ENV{INCLUDEOS_PREFIX})
    set(CMAKE_INSTALL_PREFIX $ENV{INCLUDEOS_PREFIX} CACHE PATH "..." FORCE)
  else()
-   set(CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX}/includeos)
+   set(CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX}/includeos CACHE PATH "..." FORCE)
    message(WARNING "CMAKE_INSTALL_PREFIX is default ${CMAKE_INSTALL_PREFIX} did you forget to set INCLUDEOS_PREFIX")
  endif()
 endif()
@@ -164,13 +164,19 @@ if ("${ARCH}" STREQUAL "i686" OR "${ARCH}" STREQUAL "i386" )
   set(CMAKE_ASM_NASM_OBJECT_FORMAT "elf")
   set(OBJCOPY_TARGET "elf32-i386")
   set(CAPABS "${CAPABS} -m32")
+elseif ("${ARCH}" STREQUAL "aarch64")
+  #In cmake we trust
+  #set(CMAKE_ASM_NASM_OBJECT_FORMAT "elf64")
+  #TODO set(OBJCOPY_TARGET "elf64-x86-64")
+  #set(CAPABS "${CAPABS} -m64")
 else()
   set(CMAKE_ASM_NASM_OBJECT_FORMAT "elf64")
   set(OBJCOPY_TARGET "elf64-x86-64")
   set(CAPABS "${CAPABS} -m64")
+  enable_language(ASM_NASM)
 endif()
 
-enable_language(ASM_NASM)
+
 
 # initialize C and C++ compiler flags
 if (CMAKE_COMPILER_IS_GNUCC)
@@ -259,21 +265,15 @@ if(tests)
 endif(tests)
 
 #
-# Libraries
-#
-#TODO verify the asumption that all these work once all the proper includes are in order!!
-#TODO create conan package for mana,uplink,mender,liveupdate and lb
-
-#
 # Installation
 #
 set(CMAKE_INSTALL_MESSAGE LAZY) # to avoid spam
 
 # Install cmake files
-install(FILES cmake/pre.service.cmake DESTINATION cmake)
-install(FILES cmake/post.service.cmake DESTINATION cmake)
-install(FILES cmake/linux.service.cmake DESTINATION cmake)
-install(FILES cmake/library.cmake DESTINATION cmake)
+#install(FILES cmake/pre.service.cmake DESTINATION cmake)
+#install(FILES cmake/post.service.cmake DESTINATION cmake)
+#install(FILES cmake/linux.service.cmake DESTINATION cmake)
+#install(FILES cmake/library.cmake DESTINATION cmake)
 install(FILES cmake/os.cmake DESTINATION cmake)
 install(FILES cmake/${DEFAULT_SETTINGS_CMAKE} DESTINATION cmake RENAME settings.cmake) # cpu_feat_vanilla opt
 
@@ -281,7 +281,7 @@ install(FILES cmake/${DEFAULT_SETTINGS_CMAKE} DESTINATION cmake RENAME settings.
 install(DIRECTORY vmrunner DESTINATION tools)
 install(FILES vmrunner/${DEFAULT_VM} DESTINATION tools/vmrunner/ RENAME vm.default.json) # cpu_feat_vanilla opt
 
-# TODO ? move to "linux cmake"
+# TODO ? move to "linux cmake" this is only apple
 # Install toolchain
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/elf-toolchain.cmake DESTINATION cmake)
 

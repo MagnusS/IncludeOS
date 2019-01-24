@@ -33,4 +33,4 @@ class LibgccConan(ConanFile):
         self.copy("*.a",dst="lib",src="./")
 
     def deploy(self):
-        self.copy("*.a",dst="lib",src="libgcc")
+        self.copy("*.a",dst="lib",src="lib")

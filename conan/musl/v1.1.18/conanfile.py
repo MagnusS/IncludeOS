@@ -35,15 +35,18 @@ class MuslConan(ConanFile):
         tools.patch(base_path="musl",patch_file="etc/musl/endian.patch")
         shutil.copy("api/syscalls.h","musl/src/internal/includeos_syscalls.h")
         shutil.copy("etc/musl/syscall.h","musl/src/internal")
-        os.unlink("musl/arch/x86_64/syscall_arch.h")
-        os.unlink("musl/arch/i386/syscall_arch.h")
+        #only unlink the actual arch..
+        #os.unlink("musl/arch/x86_64/syscall_arch.h")
+        #os.unlink("musl/arch/i386/syscall_arch.h")
+        #os.unlink("musl/arch/aarch64/syscall_arch.h")
+
 
     def _find_arch(self):
-        if str(self.settings.arch) == "x86_64":
-            return "x86_64"
-        if str(self.settings.arch) == "x86" :
-            return "i386"
-        raise ConanInvalidConfiguration("Binutils no valid target for {}".format(self.settings.arch))
+        return {
+            "x86_64":"x86_64",
+            "x86" : "i386",
+            "armv8" : "aarch64"
+        }.get(str(self.settings.arch))
 
     def _find_host_arch(self):
         if str(self.settings.arch_build) == "x86":
@@ -51,7 +54,9 @@ class MuslConan(ConanFile):
         return str(self.settings.arch_build)
 
     def build(self):
+        os.unlink("musl/arch/{}/syscall_arch.h".format(self._find_arch()))
         host = self._find_host_arch()+"-pc-linux-gnu"
+        #triple = self._find_arch()+"-elf"
         triple = self._find_arch()+"-elf"
         args=[
             "--disable-shared",
@@ -62,6 +67,7 @@ class MuslConan(ConanFile):
         env_build = AutoToolsBuildEnvironment(self)
         if str(self.settings.compiler) == 'clang':
             env_build.flags=["-g","-target {}-pc-linux-gnu".format(self._find_arch())]
+            args.append("--target={}-pc-linux-gnu".format(self._find_arch()))
         #TODO fix this is only correct if the host is x86_64
         if str(self.settings.compiler) == 'gcc':
             if self._find_arch() == "x86_64":

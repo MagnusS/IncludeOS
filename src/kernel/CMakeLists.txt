@@ -11,11 +11,11 @@
     elf.cpp
     vga.cpp
     context.cpp
-    context_asm.asm
+
     fiber.cpp
     tls.cpp
     profile.cpp
-    scoped_profiler.cpp
+
     terminal.cpp
     timers.cpp
     rng.cpp
@@ -29,4 +29,12 @@ if (NOT CMAKE_TESTING_ENABLED)
     rtc.cpp
   )
 endif()
+
+if(${ARCH} STREQUAL "x86_64" OR ${ARCH} STREQUAL "i686")
+  list(APPEND SRCS
+    context_asm.asm
+    scoped_profiler.cpp
+  )
+endif()
+
 add_library(kernel OBJECT ${SRCS})

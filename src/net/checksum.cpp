@@ -16,8 +16,10 @@
 // limitations under the License.
 
 #include <net/checksum.hpp>
-#include <immintrin.h>
-#include <x86intrin.h>
+#if defined(ARCH_x86_64) || defined(ARCH_i686)
+  #include <immintrin.h>
+  #include <x86intrin.h>
+#endif
 #include <cassert>
 
 namespace net {

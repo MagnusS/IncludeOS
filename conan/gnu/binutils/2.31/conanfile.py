@@ -4,7 +4,7 @@ from conans import ConanFile,tools,AutoToolsBuildEnvironment
 class BinutilsConan(ConanFile):
     #we dont care how you compiled it but which os and arch it is meant to run on and which arch its targeting
     #pre conan 2.0 we have to use arch_build as host arch and arch as target arch
-    settings= "arch_build","os_build","arch"
+    settings= "arch_build","os_build","arch","os"
     name = "binutils"
     version = "2.31"
     url = "https://www.gnu.org/software/binutils/"
@@ -16,9 +16,11 @@ class BinutilsConan(ConanFile):
         tools.unzip(zip_name)
 
     def _find_arch(self):
-        if str(self.settings.arch) == "x86":
-            return "i386"
-        return str(self.settings.arch)
+        return {
+                "x86":"i386",
+                "x86_64":"x86_64",
+                "armv8" :"aarch64"
+        }.get(str(self.settings.arch))
 
     def _find_host_arch(self):
         if str(self.settings.arch_build) == "x86":
@@ -27,6 +29,7 @@ class BinutilsConan(ConanFile):
 
     def build(self):
         arch=self._find_arch()
+        print("ARCH = {}".format(arch))
         env_build = AutoToolsBuildEnvironment(self)
         env_build.configure(configure_dir="binutils-{}".format(self.version),
             target=arch+"-elf",

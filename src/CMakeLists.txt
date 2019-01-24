@@ -5,6 +5,7 @@
 #TODO restructure this in a different commit based on KJ/CMakeFixes branch
 add_definitions(-DARCH_${ARCH})
 add_definitions(-DARCH="${ARCH}")
+message(status "Adding compile defitions -DARCH_${ARCH}")
 
 if (smp)
   add_definitions(-DINCLUDEOS_SMP_ENABLE)
@@ -18,14 +19,11 @@ include_directories(
 #TODO move to util and check if needed / can be changed.. unwanted dependency?
 include_directories(${INCLUDEOS_ROOT}/lib/LiveUpdate)
 
-
-
 set(SRCS
   version.cpp
 )
 
 set(LIBRARIES
-    fuzz
     kernel
     util
     net
@@ -34,6 +32,10 @@ set(LIBRARIES
     virtio
     hw
 )
+
+if (NOT CORE_OS)
+  list(APPEND LIBRARIES fuzz)
+endif()
 
 if (NOT CMAKE_TESTING_ENABLED)
   list(APPEND LIBRARIES crt)
@@ -53,7 +55,6 @@ if (CMAKE_TESTING_ENABLED)
 endif()
 add_library(os STATIC ${SRCS} ${OBJECTS})
 
-
 if (NOT CMAKE_TESTING_ENABLED)
   add_dependencies(os version )
   add_subdirectory(arch/${ARCH})
@@ -67,8 +68,13 @@ if (NOT CMAKE_TESTING_ENABLED)
 
     add_subdirectory(drivers)
     add_subdirectory(plugins)
+  else()
+    if (${ARCH} STREQUAL "aarch64")
+      add_subdirectory(platform/aarch64_vm)
+    else()
+      add_subdirectory(platform/x86_nano)
+    endif()
   endif()
-  add_subdirectory(platform/x86_nano)
   # Add musl
   add_subdirectory(musl)
 endif()
