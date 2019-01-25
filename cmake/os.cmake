@@ -1,4 +1,3 @@
-
 # configure options
 option(default_stdout "Use the OS default stdout (serial)" ON)
 
@@ -12,7 +11,10 @@ option(thin_lto "Enable Thin LTO plugin" OFF)
 option(full_lto "Enable full LTO (also works on LD)" OFF)
 option(coroutines "Compile with coroutines TS support" OFF)
 
-
+#make sure variables are set
+if (NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Release")
+endif()
 
 set(CPP_VERSION c++17)
 set (CMAKE_CXX_STANDARD 17)
@@ -37,8 +39,28 @@ if (NOT DEFINED PLATFORM)
   endif()
 endif()
 
+#Sets the includeos default profile to system default
+if (NOT DEFINED CONAN_PROFILE)
+  SET(CONAN_PROFILE "default")
+endif()
+
 #TODO move this into sub scripts conan.cmake and normal.cmake
-if(CONAN_EXPORTED)
+if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/conanfile.py)
+  SET(CONAN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/conanfile.py)
+elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/conanfile.txt)
+  SET(CONAN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/conanfile.txt)
+endif()
+
+if (CONAN_FILE)
+  #download conan ?
+  conan_cmake_run(
+    CONANFILE ${CONAN_FILE}
+    PROFILE ${CONAN_PROFILE}
+    #OPTIONS apple=${APPLE} solo5=${WITH_SOLO5} basic=${CORE_OS}
+    BASIC_SETUP
+    #NO_IMPORTS
+  )
+elseif(CONAN_EXPORTED)
   # standard conan installation, deps will be defined in conanfile.py
   # and not necessary to call conan again, conan is already running
   include(${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo.cmake)
@@ -330,7 +352,33 @@ function(os_add_executable TARGET NAME)
 
 endfunction()
 
-##
+##string parse ? painful
+function(os_add_conan_package TARGET PACKAGE)
+
+  if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
+     message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
+     file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/master/conan.cmake"
+                    "${CMAKE_BINARY_DIR}/conan.cmake")
+  endif()
+  #TODO se if this goes all wack
+  include(${CMAKE_BINARY_DIR}/conan.cmake)
+  #should we specify a directory.. can we run it multiple times ?
+  conan_cmake_run(
+    REQUIRES ${PACKAGE}
+    BASIC_SETUP
+    CMAKE_TARGETS
+    PROFILE ${CONAN_PROFILE}
+  )
+  #convert pkg/version@user/channel to pkg;versin;user;chanel
+  string(REPLACE "@" ";" LIST ${PACKAGE})
+  string(REPLACE "/" ";" LIST ${LIST})
+  #get the first element
+  list(GET LIST 0 PKG)
+
+  os_link_libraries(${TARGET} CONAN_PKG::${PKG})
+
+endfunction()
+
 function(os_compile_options TARGET)
   target_compile_options(${TARGET}${ELF_POSTFIX} ${ARGN})
 endfunction()

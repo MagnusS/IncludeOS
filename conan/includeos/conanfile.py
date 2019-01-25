@@ -28,6 +28,9 @@ class IncludeOSConan(ConanFile):
         self.requires("libcxx/[>=5.0]@includeos/test")## do we need this or just headers
         self.requires("GSL/2.0.0@includeos/test")
 
+        if self.settings.arch == "armv8":
+            self.requires("libfdt/1.4.7@includeos/test")
+
         if self.options.basic == 'OFF':
             self.requires("rapidjson/1.1.0@includeos/test")
             self.requires("http-parser/2.8.1@includeos/test") #this one is almost free anyways
