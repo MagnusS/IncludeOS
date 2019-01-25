@@ -24,7 +24,7 @@ void Service::start(const std::string& args)
 #ifdef __GNUG__
   printf("Built by g++ " __VERSION__ "\n");
 #endif
-  printf("Hello world! Time is now %s\n", isotime::now().c_str());
+  //printf("Hello world! Time is now %s\n", isotime::now().c_str());
   printf("Args = %s\n", args.c_str());
   printf("Try giving the service less memory, eg. 5MB in vm.json\n");
 }

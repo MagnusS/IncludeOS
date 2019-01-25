@@ -18,3 +18,4 @@ project (service)
 include(os)
 
 os_add_executable(seed "IncludeOS seed" service.cpp)
+os_add_conan_package(seed "libfdt/1.4.7@includeos/test")
