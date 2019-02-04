@@ -18,13 +18,28 @@
 #include <service>
 #include <cstdio>
 #include <isotime>
+#include <stdexcept>
 
 void Service::start(const std::string& args)
 {
 #ifdef __GNUG__
   printf("Built by g++ " __VERSION__ "\n");
 #endif
+  printf("DO crash\n");
+  //SVC is not legal in EL1.. HVC and SMC is
+  asm volatile ("svc #0"); //this will trigger a syn exception and return
+  /* TODO fix this
+  try {
+
+    //raise std::exception("Test");
+    throw std::invalid_argument( "received negative value" );
+  }
+  catch(...)
+  {
+    printf("Exception caught\n");
+  }*/
+  //TODO fix time handling
   //printf("Hello world! Time is now %s\n", isotime::now().c_str());
   printf("Args = %s\n", args.c_str());
-  printf("Try giving the service less memory, eg. 5MB in vm.json\n");
+  printf("Try giving the service less memory, eg. 3MB in vm.json\n");
 }
